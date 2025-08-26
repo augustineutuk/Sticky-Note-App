@@ -8,103 +8,99 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <h2>Sticky Note App</h2>
+  <div id="notes"></div>
 
-  <h1>Type your Note</h1>
+ <script>
+    const notesContainer = document.getElementById("notes");
 
-  <!-- Notes Grid -->
-  <div id="notesContainer"></div>
+    function rowsForViewport() {
+      const w = window.innerWidth;
+      if (w <= 480) return 1;      // mobile
+      if (w <= 768) return 2;      // tablet
+      return 3;                    // desktop
+    }
 
-  <script>
-    const notesContainer = document.getElementById("notesContainer");
-    const WORD_LIMIT = 250; // word limit
+    function applyRowsTo(textarea) {
+      textarea.rows = rowsForViewport();
+    }
 
-    // Save notes to localStorage
-    function saveNotes() {
-      const notes = [];
-      document.querySelectorAll(".note textarea").forEach((textarea) => {
-        notes.push(textarea.value);
-      });
+    function applyRowsToAll() {
+      document.querySelectorAll("#notes textarea").forEach(applyRowsTo);
+    }
+
+    window.addEventListener("resize", applyRowsToAll);
+
+    function createNote(content = "") {
+      const noteDiv = document.createElement("div");
+      noteDiv.className = "note-container";
+
+      const textarea = document.createElement("textarea");
+      textarea.value = content;
+      applyRowsTo(textarea);
+
+      // + button always visible
+      const addBtn = document.createElement("button");
+      addBtn.textContent = "+";
+      addBtn.className = "add-btn";
+      addBtn.onclick = () => {
+        createNote();
+        saveAllNotes();
+      };
+
+      // Buttons (hidden until hover)
+      const btnContainer = document.createElement("div");
+      btnContainer.className = "buttons";
+
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save";
+      saveBtn.className = "save-btn";
+      saveBtn.onclick = () => {
+        saveAllNotes();
+        alert("Note saved!");
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.className = "delete-btn";
+      deleteBtn.onclick = () => {
+        noteDiv.remove();
+        saveAllNotes();
+      };
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Edit";
+      editBtn.className = "edit-btn";
+      editBtn.onclick = () => {
+        textarea.disabled = !textarea.disabled;
+        editBtn.textContent = textarea.disabled ? "Enable" : "Edit";
+      };
+
+      // Order: Save | Delete | Edit
+      btnContainer.append(saveBtn, deleteBtn, editBtn);
+
+      noteDiv.append(textarea, addBtn, btnContainer);
+      notesContainer.appendChild(noteDiv);
+
+      textarea.addEventListener("blur", saveAllNotes);
+    }
+
+    function saveAllNotes() {
+      const textareas = document.querySelectorAll("#notes textarea");
+      const notes = Array.from(textareas).map(t => t.value);
       localStorage.setItem("notes", JSON.stringify(notes));
     }
 
-    // Load notes from localStorage
     function loadNotes() {
-      const savedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-      if (savedNotes.length === 0) {
-        createNoteElement("");
+      const saved = localStorage.getItem("notes");
+      if (saved) {
+        JSON.parse(saved).forEach(note => createNote(note));
       } else {
-        savedNotes.forEach((content) => createNoteElement(content));
+        createNote();
       }
+      applyRowsToAll();
     }
 
-    // Create a note
-    function createNoteElement(content = "") {
-      const note = document.createElement("div");
-      note.className = "note";
-
-      // Textarea
-      const textarea = document.createElement("textarea");
-      textarea.value = content;
-
-      // Word limit enforcement
-      textarea.addEventListener("input", () => {
-        let words = textarea.value.trim().split(/\s+/).filter(Boolean);
-        if (words.length > WORD_LIMIT) {
-          textarea.value = words.slice(0, WORD_LIMIT).join(" ");
-          alert(`Maximum ${WORD_LIMIT} words allowed!`);
-        }
-        saveNotes();
-      });
-
-      // Controls (Edit/Delete)
-      const controls = document.createElement("div");
-      controls.className = "controls";
-
-      // Edit button
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "Edit";
-      editBtn.addEventListener("click", () => {
-        textarea.removeAttribute("readonly");
-        textarea.focus();
-      });
-
-      // Delete button
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "Delete";
-      deleteBtn.addEventListener("click", () => {
-        note.remove();
-        saveNotes();
-        if (document.querySelectorAll(".note").length === 0) {
-          createNoteElement("");
-        }
-      });
-
-      controls.appendChild(editBtn);
-      controls.appendChild(deleteBtn);
-
-      // + Button
-      const addBtn = document.createElement("button");
-      addBtn.textContent = "+";
-      addBtn.className = "add";
-      addBtn.addEventListener("click", () => {
-        const words = textarea.value.trim().split(/\s+/).filter(Boolean);
-        if (words.length < WORD_LIMIT) {
-          alert(`You must complete ${WORD_LIMIT} words before adding a new note.`);
-          return;
-        }
-        createNoteElement("");
-      });
-
-      // Assemble note
-      note.appendChild(textarea);
-      note.appendChild(controls);
-      note.appendChild(addBtn);
-
-      notesContainer.appendChild(note);
-      saveNotes();
-    }
-
-    // Initial load
     loadNotes();
   </script>
 </body>
