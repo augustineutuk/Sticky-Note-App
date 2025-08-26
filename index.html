@@ -10,10 +10,10 @@
 <body>
   <h2>Sticky Note App</h2>
   <div id="notes"></div>
-
- <script>
+<script>
     const notesContainer = document.getElementById("notes");
 
+    // Set rows depending on screen size
     function rowsForViewport() {
       const w = window.innerWidth;
       if (w <= 480) return 1;      // mobile
@@ -31,6 +31,7 @@
 
     window.addEventListener("resize", applyRowsToAll);
 
+    // Create new note
     function createNote(content = "") {
       const noteDiv = document.createElement("div");
       noteDiv.className = "note-container";
@@ -39,7 +40,6 @@
       textarea.value = content;
       applyRowsTo(textarea);
 
-      // + button always visible
       const addBtn = document.createElement("button");
       addBtn.textContent = "+";
       addBtn.className = "add-btn";
@@ -48,7 +48,6 @@
         saveAllNotes();
       };
 
-      // Buttons (hidden until hover)
       const btnContainer = document.createElement("div");
       btnContainer.className = "buttons";
 
@@ -56,8 +55,28 @@
       saveBtn.textContent = "Save";
       saveBtn.className = "save-btn";
       saveBtn.onclick = () => {
+        if (textarea.value.trim() !== "") { 
+          saveAllNotes();
+          alert("Note saved!");
+        } else {
+          alert("Cannot save an empty note.");
+        }
+      };
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Disable";
+      editBtn.className = "edit-btn";
+      editBtn.onclick = () => {
+        textarea.disabled = !textarea.disabled;
+        editBtn.textContent = textarea.disabled ? "Enable" : "Disable";
+      };
+
+      const clearBtn = document.createElement("button");
+      clearBtn.textContent = "Clear";
+      clearBtn.className = "clear-btn";
+      clearBtn.onclick = () => {
+        textarea.value = "";
         saveAllNotes();
-        alert("Note saved!");
       };
 
       const deleteBtn = document.createElement("button");
@@ -68,34 +87,34 @@
         saveAllNotes();
       };
 
-      const editBtn = document.createElement("button");
-      editBtn.textContent = "Edit";
-      editBtn.className = "edit-btn";
-      editBtn.onclick = () => {
-        textarea.disabled = !textarea.disabled;
-        editBtn.textContent = textarea.disabled ? "Enable" : "Edit";
-      };
-
-      // Order: Save | Delete | Edit
-      btnContainer.append(saveBtn, deleteBtn, editBtn);
-
+      btnContainer.append(saveBtn, editBtn, clearBtn, deleteBtn);
       noteDiv.append(textarea, addBtn, btnContainer);
       notesContainer.appendChild(noteDiv);
 
       textarea.addEventListener("blur", saveAllNotes);
     }
 
+    // Save all notes (skip empty)
     function saveAllNotes() {
       const textareas = document.querySelectorAll("#notes textarea");
-      const notes = Array.from(textareas).map(t => t.value);
+      const notes = Array.from(textareas)
+        .map(t => t.value.trim())
+        .filter(val => val !== "");
       localStorage.setItem("notes", JSON.stringify(notes));
     }
 
+    // Load notes from storage (with error handling)
     function loadNotes() {
-      const saved = localStorage.getItem("notes");
-      if (saved) {
-        JSON.parse(saved).forEach(note => createNote(note));
-      } else {
+      try {
+        const saved = localStorage.getItem("notes");
+        if (saved) {
+          JSON.parse(saved).forEach(note => createNote(note));
+        } else {
+          createNote();
+        }
+      } catch (e) {
+        console.error("Error loading notes:", e);
+        localStorage.removeItem("notes");
         createNote();
       }
       applyRowsToAll();
