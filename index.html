@@ -14,129 +14,133 @@
 <div id="message" style="display:none; color: green; margin: 10px 0; font-weight: bold;"></div>
 
 <script>
-      const notesContainer = document.getElementById("notes");
-const messageDiv = document.getElementById("message");
+    const notesContainer = document.getElementById("notes");
+    const messageDiv = document.getElementById("message");
 
-// Function to show messages
-function showMessage(text, duration = 2000) {
-  messageDiv.textContent = text;
-  messageDiv.style.display = "block";
-  setTimeout(() => {
-    messageDiv.style.display = "none";
-  }, duration);
-}
-
-// Set rows depending on screen size
-function rowsForViewport() {
-  const w = window.innerWidth;
-  if (w <= 480) return 1;      // mobile
-  if (w <= 768) return 2;      // tablet
-  return 3;                    // desktop
-}
-
-function applyRowsTo(textarea) {
-  textarea.rows = rowsForViewport();
-}
-
-function applyRowsToAll() {
-  document.querySelectorAll("#notes textarea").forEach(applyRowsTo);
-}
-
-window.addEventListener("resize", applyRowsToAll);
-
-// Create new note
-function createNote(content = "") {
-  const noteDiv = document.createElement("div");
-  noteDiv.className = "note-container";
-
-  const textarea = document.createElement("textarea");
-  textarea.value = content;
-  applyRowsTo(textarea);
-
-  const addBtn = document.createElement("button");
-  addBtn.textContent = "+";
-  addBtn.className = "add-btn";
-  addBtn.onclick = () => {
-    if (textarea.value.trim() !== "") {   // ✅ only add if something typed
-      createNote();
-      saveAllNotes();
+    // Function to show messages
+    function showMessage(text, duration = 2000) {
+      messageDiv.textContent = text;
+      messageDiv.style.display = "block";
+      setTimeout(() => {
+        messageDiv.style.display = "none";
+      }, duration);
     }
-  };
 
-  const btnContainer = document.createElement("div");
-  btnContainer.className = "buttons";
-
-  const saveBtn = document.createElement("button");
-  saveBtn.textContent = "Save";
-  saveBtn.className = "save-btn";
-  saveBtn.onclick = () => {
-    if (textarea.value.trim() !== "") { 
-      saveAllNotes();
-      showMessage("Note saved!");  // ✅ show message
+    // Set rows depending on screen size
+    function rowsForViewport() {
+      const w = window.innerWidth;
+      if (w <= 480) return 1;      // mobile
+      if (w <= 768) return 2;      // tablet
+      return 3;                    // desktop
     }
-  };
 
-  const editBtn = document.createElement("button");
-  editBtn.textContent = "Disable";
-  editBtn.className = "edit-btn";
-  editBtn.onclick = () => {
-    textarea.disabled = !textarea.disabled;
-    editBtn.textContent = textarea.disabled ? "Enable" : "Disable";
-  };
-
-  const clearBtn = document.createElement("button");
-  clearBtn.textContent = "Clear";
-  clearBtn.className = "clear-btn";
-  clearBtn.onclick = () => {
-    if (textarea.value.trim() !== "") {   // ✅ only clear if something typed
-      textarea.value = "";
-      saveAllNotes();
-      showMessage("Note cleared!");
+    function applyRowsTo(textarea) {
+      textarea.rows = rowsForViewport();
     }
-  };
 
-  const deleteBtn = document.createElement("button");
-  deleteBtn.textContent = "Delete";
-  deleteBtn.className = "delete-btn";
-  deleteBtn.onclick = () => {
-    noteDiv.remove();
-    saveAllNotes();
-  };
-
-  btnContainer.append(saveBtn, editBtn, clearBtn, deleteBtn);
-  noteDiv.append(textarea, addBtn, btnContainer);
-  notesContainer.appendChild(noteDiv);
-
-  textarea.addEventListener("blur", saveAllNotes);
-}
-
-// Save all notes (skip empty)
-function saveAllNotes() {
-  const textareas = document.querySelectorAll("#notes textarea");
-  const notes = Array.from(textareas)
-    .map(t => t.value.trim())
-    .filter(val => val !== "");
-  localStorage.setItem("notes", JSON.stringify(notes));
-}
-
-// Load notes from storage (with error handling)
-function loadNotes() {
-  try {
-    const saved = localStorage.getItem("notes");
-    if (saved) {
-      JSON.parse(saved).forEach(note => createNote(note));
-    } else {
-      createNote();
+    function applyRowsToAll() {
+      document.querySelectorAll("#notes textarea").forEach(applyRowsTo);
     }
-  } catch (e) {
-    console.error("Error loading notes:", e);
-    localStorage.removeItem("notes");
-    createNote();
-  }
-  applyRowsToAll();
-}
 
-loadNotes();
+    window.addEventListener("resize", applyRowsToAll);
+
+    // Create new note
+    function createNote(content = "") {
+      const noteDiv = document.createElement("div");
+      noteDiv.className = "note-container";
+
+      const textarea = document.createElement("textarea");
+      textarea.value = content;
+      applyRowsTo(textarea);
+
+      const addBtn = document.createElement("button");
+      addBtn.textContent = "+";
+      addBtn.className = "add-btn";
+      addBtn.onclick = () => {
+        if (textarea.value.trim() !== "") {   // ✅ only add if something typed
+          createNote();
+          saveAllNotes();
+        }
+      };
+
+      const btnContainer = document.createElement("div");
+      btnContainer.className = "buttons";
+
+      const saveBtn = document.createElement("button");
+      saveBtn.textContent = "Save";
+      saveBtn.className = "save-btn";
+      saveBtn.onclick = () => {
+        if (textarea.value.trim() !== "") { 
+          saveAllNotes();
+          showMessage("Note saved!");  // ✅ show message
+        }
+      };
+
+      // 🔹 Replaced Edit button with Update button
+      const updateBtn = document.createElement("button");
+      updateBtn.textContent = "Update";
+      updateBtn.className = "update-btn";
+      updateBtn.onclick = () => {
+        if (textarea.value.trim() !== "") {
+          saveAllNotes();
+          showMessage("Note updated!");
+        }
+      };
+
+      const clearBtn = document.createElement("button");
+      clearBtn.textContent = "Clear";
+      clearBtn.className = "clear-btn";
+      clearBtn.onclick = () => {
+        if (textarea.value.trim() !== "") {   // ✅ only clear if something typed
+          textarea.value = "";
+          saveAllNotes();
+          showMessage("Note cleared!");
+        }
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.className = "delete-btn";
+      deleteBtn.onclick = () => {
+        noteDiv.remove();
+        saveAllNotes();
+      };
+
+      // 🔹 Use updateBtn instead of editBtn
+      btnContainer.append(saveBtn, updateBtn, clearBtn, deleteBtn);
+      noteDiv.append(textarea, addBtn, btnContainer);
+      notesContainer.appendChild(noteDiv);
+
+      textarea.addEventListener("blur", saveAllNotes);
+    }
+
+    // Save all notes (skip empty)
+    function saveAllNotes() {
+      const textareas = document.querySelectorAll("#notes textarea");
+      const notes = Array.from(textareas)
+        .map(t => t.value.trim())
+        .filter(val => val !== "");
+      localStorage.setItem("notes", JSON.stringify(notes));
+    }
+
+    // Load notes from storage (with error handling)
+    function loadNotes() {
+      try {
+        const saved = localStorage.getItem("notes");
+        if (saved) {
+          JSON.parse(saved).forEach(note => createNote(note));
+        } else {
+          createNote();
+        }
+      } catch (e) {
+        console.error("Error loading notes:", e);
+        localStorage.removeItem("notes");
+        createNote();
+      }
+      applyRowsToAll();
+    }
+
+    loadNotes();
   </script>
 </body>
 </html>
